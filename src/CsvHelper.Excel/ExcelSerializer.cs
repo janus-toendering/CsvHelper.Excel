@@ -2,14 +2,16 @@
 namespace CsvHelper.Excel
 {
     using System;
+    using System.IO;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using ClosedXML.Excel;
     using CsvHelper.Configuration;
 
     /// <summary>
     /// Defines methods used to serialize data into an Excel (2007+) file.
     /// </summary>
-    public class ExcelSerializer : ICsvSerializer
+    public class ExcelSerializer : ISerializer
     {
         private readonly string path;
         private readonly bool disposeWorkbook;
@@ -26,7 +28,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="path">The path to which to save the workbook.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(string path, CsvConfiguration configuration = null) 
+        public ExcelSerializer(string path, Configuration configuration = null) 
             : this(new XLWorkbook(XLEventTracking.Disabled), configuration)
         {
             this.path = path;
@@ -57,7 +59,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="workbook">The workbook to write the data to.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelSerializer(XLWorkbook workbook, CsvConfiguration configuration = null)
+        public ExcelSerializer(XLWorkbook workbook, Configuration configuration = null)
             : this(workbook, "Export", configuration)
         {
             disposeWorksheet = true;
@@ -74,7 +76,7 @@ namespace CsvHelper.Excel
         /// <param name="workbook">The workbook to write the data to.</param>
         /// <param name="sheetName">The name of the sheet to write to.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelSerializer(XLWorkbook workbook, string sheetName, CsvConfiguration configuration = null)
+        public ExcelSerializer(XLWorkbook workbook, string sheetName, Configuration configuration = null)
             : this(workbook.GetOrAddWorksheet(sheetName), configuration)
         {
             disposeWorksheet = true;
@@ -89,27 +91,34 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="worksheet">The worksheet to write the data to.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(IXLWorksheet worksheet, CsvConfiguration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
+        public ExcelSerializer(IXLWorksheet worksheet, Configuration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
     
         /// <summary>
         /// Creates a new serializer using the given <see cref="IXLWorksheet"/>.
         /// </summary>
         /// <param name="range">The range to write the data to.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(IXLRange range, CsvConfiguration configuration = null) : this((IXLRangeBase)range, configuration) { }
+        public ExcelSerializer(IXLRange range, Configuration configuration = null) : this((IXLRangeBase)range, configuration) { }
 
-        private ExcelSerializer(IXLRangeBase range, CsvConfiguration configuration)
+        private ExcelSerializer(IXLRangeBase range, Configuration configuration)
         {
             Workbook = range.Worksheet.Workbook;
             this.range = range;
-            Configuration = configuration ?? new CsvConfiguration();
-            Configuration.QuoteNoFields = true;
+            Configuration = configuration ?? new Configuration();            
+            Context = new WritingContext(TextWriter.Null, Configuration, false);
         }
+
+        /// <summary>
+        /// Gets the writing context.
+        /// </summary>
+        public WritingContext Context { get; private set; }
 
         /// <summary>
         /// Gets the configuration.
         /// </summary>
-        public CsvConfiguration Configuration { get; }
+        public Configuration Configuration { get; private set; }
+
+        ISerializerConfiguration ISerializer.Configuration => Configuration;
 
         /// <summary>
         /// Gets the workbook to which the data is being written.
@@ -183,7 +192,7 @@ namespace CsvHelper.Excel
             if (disposed) return;
             if (disposing)
             {
-                if (disposeWorksheet) range.Worksheet.Dispose();
+                //if (disposeWorksheet) range.Worksheet.Dispose();
                 if (disposeWorkbook)
                 {
                     Workbook.SaveAs(path);
@@ -205,6 +214,31 @@ namespace CsvHelper.Excel
             {
                 throw new ObjectDisposedException(GetType().ToString());
             }
+        }
+
+        /// <summary>
+        /// Writes asynchronously a record to the Excel file.
+        /// </summary>
+        /// <param name="record">The record to write.</param>
+        /// <returns></returns>
+        public Task WriteAsync(string[] record)
+        {
+            Write(record);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Implementation forced by CsvHelper : <see cref="IParser"/>.
+        /// </summary>
+        public void WriteLine() { }
+
+        /// <summary>
+        /// Implementation forced by CsvHelper : <see cref="IParser"/>
+        /// </summary>
+        public Task WriteLineAsync()
+        {
+            WriteLine();
+            return Task.CompletedTask;
         }
     }
 }
