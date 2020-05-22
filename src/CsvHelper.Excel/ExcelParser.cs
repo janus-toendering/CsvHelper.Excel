@@ -1,7 +1,7 @@
-
 namespace CsvHelper.Excel
 {
     using System;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -22,7 +22,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="path">The path.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(string path, Configuration configuration = null)
+        public ExcelParser(string path, CsvConfiguration configuration = null)
             : this(new XLWorkbook(path, XLEventTracking.Disabled), configuration)
         {
             shouldDisposeWorkbook = true;
@@ -34,7 +34,7 @@ namespace CsvHelper.Excel
         /// <param name="path">The path to the workbook.</param>
         /// <param name="sheetName">The name of the sheet to import data from.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(string path, string sheetName, Configuration configuration = null)
+        public ExcelParser(string path, string sheetName, CsvConfiguration configuration = null)
             : this(new XLWorkbook(path, XLEventTracking.Disabled), sheetName, configuration)
         {
             shouldDisposeWorkbook = true;
@@ -48,7 +48,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="workbook">The <see cref="XLWorkbook"/> with the data.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(XLWorkbook workbook, Configuration configuration = null) : this(workbook.Worksheets.First(), configuration) { }
+        public ExcelParser(XLWorkbook workbook, CsvConfiguration configuration = null) : this(workbook.Worksheets.First(), configuration) { }
 
         /// <summary>
         /// Creates a new parser using the given <see cref="XLWorkbook"/> and <see cref="CsvConfiguration"/>.
@@ -59,27 +59,27 @@ namespace CsvHelper.Excel
         /// <param name="workbook">The <see cref="XLWorkbook"/> with the data.</param>
         /// <param name="sheetName">The name of the sheet to import from.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(XLWorkbook workbook, string sheetName, Configuration configuration = null) : this(workbook.Worksheet(sheetName), configuration) { }
+        public ExcelParser(XLWorkbook workbook, string sheetName, CsvConfiguration configuration = null) : this(workbook.Worksheet(sheetName), configuration) { }
 
         /// <summary>
         /// Creates a new parser using the given <see cref="IXLWorksheet"/> and <see cref="CsvConfiguration"/>.
         /// </summary>
         /// <param name="worksheet">The <see cref="IXLWorksheet"/> with the data.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(IXLWorksheet worksheet, Configuration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
+        public ExcelParser(IXLWorksheet worksheet, CsvConfiguration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
 
         /// <summary>
         /// Creates a new parser using the given <see cref="IXLRange"/> and <see cref="CsvConfiguration"/>.
         /// </summary>
         /// <param name="range">The <see cref="IXLRange"/> with the data.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelParser(IXLRange range, Configuration configuration = null) : this((IXLRangeBase)range, configuration) { }
+        public ExcelParser(IXLRange range, CsvConfiguration configuration = null) : this((IXLRangeBase)range, configuration) { }
 
-        private ExcelParser(IXLRangeBase range, Configuration configuration)
+        private ExcelParser(IXLRangeBase range, CsvConfiguration configuration)
         {
             Workbook = range.Worksheet.Workbook;
             this.range = range;
-            Configuration = configuration ?? new Configuration();
+            Configuration = configuration ?? new CsvConfiguration(CultureInfo.InvariantCulture);
             Context = new ReadingContext(TextReader.Null, Configuration, false);
             FieldCount = range.CellsUsed().Max(cell => cell.Address.ColumnNumber) - range.CellsUsed().Min(cell => cell.Address.ColumnNumber) + 1;
         }
@@ -87,7 +87,7 @@ namespace CsvHelper.Excel
         /// <summary>
         /// Gets the configuration.
         /// </summary>
-        public Configuration Configuration { get; }
+        public CsvConfiguration Configuration { get; }
 
         /// <summary>
         /// Gets the workbook from which we are reading data.

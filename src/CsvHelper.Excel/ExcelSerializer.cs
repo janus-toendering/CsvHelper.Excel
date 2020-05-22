@@ -1,7 +1,7 @@
-
 namespace CsvHelper.Excel
 {
     using System;
+    using System.Globalization;
     using System.IO;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -28,7 +28,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="path">The path to which to save the workbook.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(string path, Configuration configuration = null) 
+        public ExcelSerializer(string path, CsvConfiguration configuration = null)
             : this(new XLWorkbook(XLEventTracking.Disabled), configuration)
         {
             this.path = path;
@@ -48,7 +48,7 @@ namespace CsvHelper.Excel
             this.path = path;
             disposeWorkbook = true;
         }
-        
+
         /// <summary>
         /// Creates a new serializer using the given <see cref="XLWorkbook"/> and <see cref="CsvConfiguration"/>.
         /// <remarks>
@@ -59,7 +59,7 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="workbook">The workbook to write the data to.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelSerializer(XLWorkbook workbook, Configuration configuration = null)
+        public ExcelSerializer(XLWorkbook workbook, CsvConfiguration configuration = null)
             : this(workbook, "Export", configuration)
         {
             disposeWorksheet = true;
@@ -76,12 +76,12 @@ namespace CsvHelper.Excel
         /// <param name="workbook">The workbook to write the data to.</param>
         /// <param name="sheetName">The name of the sheet to write to.</param>
         /// <param name="configuration">The configuration.</param>
-        public ExcelSerializer(XLWorkbook workbook, string sheetName, Configuration configuration = null)
+        public ExcelSerializer(XLWorkbook workbook, string sheetName, CsvConfiguration configuration = null)
             : this(workbook.GetOrAddWorksheet(sheetName), configuration)
         {
             disposeWorksheet = true;
         }
-        
+
         /// <summary>
         /// Creates a new serializer using the given <see cref="IXLWorksheet"/>.
         /// <remarks>
@@ -91,20 +91,20 @@ namespace CsvHelper.Excel
         /// </summary>
         /// <param name="worksheet">The worksheet to write the data to.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(IXLWorksheet worksheet, Configuration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
-    
+        public ExcelSerializer(IXLWorksheet worksheet, CsvConfiguration configuration = null) : this((IXLRangeBase)worksheet, configuration) { }
+
         /// <summary>
         /// Creates a new serializer using the given <see cref="IXLWorksheet"/>.
         /// </summary>
         /// <param name="range">The range to write the data to.</param>
         /// <param name="configuration">The configuration</param>
-        public ExcelSerializer(IXLRange range, Configuration configuration = null) : this((IXLRangeBase)range, configuration) { }
+        public ExcelSerializer(IXLRange range, CsvConfiguration configuration = null) : this((IXLRangeBase)range, configuration) { }
 
-        private ExcelSerializer(IXLRangeBase range, Configuration configuration)
+        private ExcelSerializer(IXLRangeBase range, CsvConfiguration configuration)
         {
             Workbook = range.Worksheet.Workbook;
             this.range = range;
-            Configuration = configuration ?? new Configuration();            
+            Configuration = configuration ?? new CsvConfiguration(CultureInfo.InvariantCulture);
             Context = new WritingContext(TextWriter.Null, Configuration, false);
         }
 
@@ -116,7 +116,7 @@ namespace CsvHelper.Excel
         /// <summary>
         /// Gets the configuration.
         /// </summary>
-        public Configuration Configuration { get; private set; }
+        public CsvConfiguration Configuration { get; private set; }
 
         ISerializerConfiguration ISerializer.Configuration => Configuration;
 
@@ -173,6 +173,19 @@ namespace CsvHelper.Excel
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public virtual ValueTask DisposeAsync()
+        {
+            try
+            {
+                Dispose();
+                return default;
+            }
+            catch (Exception exception)
+            {
+                return new ValueTask(Task.FromException(exception));
+            }
         }
 
         /// <summary>
