@@ -4,10 +4,7 @@
     <AssemblyTitle>CsvHelper for Excel</AssemblyTitle>
     <VersionPrefix>1.0.6</VersionPrefix>
     <Authors>Chris Rodgers</Authors>
-    <TargetFrameworks>
-      net46;
-      netstandard2.0;
-    </TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>embedded</DebugType>
     <AssemblyName>CsvHelper.Excel</AssemblyName>
     <OutputType>Library</OutputType>
@@ -22,15 +19,6 @@
     <DocumentationFile>C:\Users\kfrancis\Documents\GitHub\CsvHelper.Excel\src\CsvHelper.Excel\CsvHelper.Excel.xml</DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-    <Reference Include="System.Data" />
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net35' ">
-    <Reference Include="System.Data" />
-    <Reference Include="System" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.2" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
