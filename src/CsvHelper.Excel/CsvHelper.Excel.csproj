@@ -16,7 +16,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net46|AnyCPU'">
-    <DocumentationFile>C:\Users\kfrancis\Documents\GitHub\CsvHelper.Excel\src\CsvHelper.Excel\CsvHelper.Excel.xml</DocumentationFile>
+    <DocumentationFile>CsvHelper.Excel.xml</DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
